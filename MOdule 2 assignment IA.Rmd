@@ -1,0 +1,356 @@
+---
+title: "Module 2 Individual Assignment"
+author: "Kiran Kasu"
+date: '2022-04-23'
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+
+```{r}
+#Loading the libraries
+library(ggplot2)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(leaps)
+library(ggthemes)
+library(car)
+library(corrplot)
+library(gridExtra)
+```
+
+
+#Task 1
+```{r}
+GP1 <- c(0.2, 0.28, 0.36, 0.16)
+OS1 <- c(12, 8, 24, 6)
+
+bloodtype_df <- data.frame(GP1,OS1)
+row.names(bloodtype_df) <- c("Type_A","Type_B","Type_O", "Type_AB")
+bloodtype_df
+
+alpha_95 = 0.05
+CV1 <- qchisq(p=0.05, df=3,lower.tail = F)
+cat("\nCritical Value For Alpha=0.05 and df=3 is",CV1,"\n")
+
+alpha_90 = 0.10
+CV2 <- qchisq(p=0.10, df=3,lower.tail = F)
+cat("\nCritical Value For Alpha=0.01 and df=3 is",CV2,"\n")
+
+#Test Statistics
+test1 <- chisq.test(x=OS1,p=GP1)
+test1$statistic
+p1 <- test1$p.value
+p1
+
+ifelse(p1 > alpha_95, "Fail to reject H0","Reject H0")
+ifelse(p1 > alpha_90, "Fail to reject H0","Reject H0")
+```
+#Task 2
+```{r}
+OT1 <- c(0.708, 0.082, 0.09, 0.12)
+RS1 <- c(125,10,25,40)
+
+OTE_DF <- data.frame(OT1,RS1)
+row.names(OTE_DF) <- c("On_time","NAS_Delay","Aircraft_Arriving_Late","Others[Weather]")
+OTE_DF
+
+alpha_95 = 0.05
+CV1 <- qchisq(p=0.05, df=3,lower.tail = F)
+cat("\nCritical Value For Alpha=0.05 and df=3 is",CV1,"\n")
+
+#Test statistics
+test2 <- chisq.test(x=RS1,p=OT1)
+test2$statistic
+p2 <-test2$p.value
+
+ifelse(p2 > alpha_95, "Fail to reject H0","Reject H0")
+```
+
+#Task 3
+```{r}
+X1<- c(724,335,174,107)
+X2<- c(370,292,152,140)
+
+#Creating a matrix
+matrix1= matrix(c(X1,X2), nrow=2,byrow=TRUE)
+matrix1
+
+rownames(matrix1)<-c("2013","2014")
+colnames(matrix1)<-c("Caucasian","Hispanic","African_American","Other")
+matrix1
+
+# Critical value
+
+alpha_95 = 0.05
+CV1 <- qchisq(0.05, 3,lower.tail = F)
+cat("\nCritical Value For Alpha=0.05 and df=3 is",CV1,"\n")
+
+test3 <-chisq.test(matrix1)
+test3
+p3 <- test3$p.value
+
+ifelse(p3 > alpha_95, "Fail to reject H0","Reject H0")
+```
+
+#Task 4
+```{r}
+RM1 <- c(10791, 7816, 932, 11819)
+RM2 <- c(62491, 42750, 9525, 54344)
+
+#Creating the matrix
+matrix_2= matrix(c(RM1,RM2),nrow=4,byrow=F)
+matrix_2
+
+rownames(matrix_2)<-c("Army", "Navy", "Marine_Corps", "Air_Force")
+colnames(matrix_2)<-c("OFFICERS","ENLISTED")
+matrix_2
+
+alpha_95 = 0.05
+CV1 <- qchisq(0.05, 3,lower.tail = F)
+cat("\nCritical Value For Alpha=0.05 and df=3 is",CV1,"\n")
+
+
+test_4 <- chisq.test(matrix_2)
+test_4
+p4 <- test_4$p.value
+p4
+
+# making the decision by comparing p-value with alpha value
+ifelse(p4 > alpha_95, "Fail to reject H0","Reject H0")
+```
+
+
+#Task 5
+```{r}
+alpha_95= 0.05
+
+Condi<- data.frame('Sodium_in_mg'=c(270,130,230,180,80,70,200),'Nutriment'=rep('Condiment',7),stringsAsFactors=F)
+cereal<- data.frame('Sodium_in_mg'=c(260,220,290,290,200,320,140),'Nutriment'=rep('cereals',7), stringsAsFactors=F)
+Dessert<- data.frame('Sodium_in_mg'=c(100,180,250,250,300,360,300),'Nutriment'=rep('Dessert',7),stringsAsFactors=F)
+
+
+sodium <- rbind(Condi,cereal,Dessert)
+sodium$Nutriment <- as.factor(sodium$Nutriment)
+
+# ANOVA TEST
+test5 <-aov(Sodium_in_mg ~ Nutriment,data=sodium)
+test5_summary <- summary(test5)
+
+freedom <- test5_summary[[1]][1,"Df"]
+freedom
+
+freedom_error <- test5_summary[[1]][2,"Df"]
+freedom_error
+
+
+squaretreatment <- test5_summary[[1]][1,"Sum Sq"]
+squaretreatment
+
+square_error <- test5_summary[[1]][2,"Sum Sq"]
+square_error
+
+# F test Statistic
+QT1 <- squaretreatment/freedom
+QT2 <- square_error/freedom_error
+F_value <- QT1/QT2
+cat("F-Statistic is",F_value,"\n")
+
+# P Value for F statistic
+p5<- test5_summary[[1]][[1,"Pr(>F)"]]
+cat("P-Value is",p5,"\n")
+
+
+ifelse(p5 > alpha_95, "Fail to reject H0","Reject H0")
+
+# calculating differences
+TukeyHSD(test5)     
+```
+
+#Test 6
+```{r}
+# Creating Data Frames
+Cereal<-data.frame('Sale_in_millions'=c(578,320,264,249,237),'Nutriment'=rep('Cereal',5),stringsAsfactors=FALSE)
+candy<-data.frame('Sale_in_millions'=c(311,106,109,125,173),'Nutriment'=rep('candy',5),stringsAsfactors=FALSE)
+Coffee<-data.frame('Sale_in_millions'=c(261,185,302,689),'Nutriment'=rep('Coffee',4),stringsAsfactors=FALSE)
+
+# Combining the Data Frames using rbind function
+DF1 <- rbind(Cereal,candy,Coffee)
+DF1$Nutriment <- as.factor(DF1$Nutriment)
+DF1
+
+# performing ANOVA Test
+test6 <-aov(Sale_in_millions ~ Nutriment,data=DF1)
+test6_summary <- summary(test6)
+
+freedom <- test6_summary[[1]][1,"Df"]
+freedom
+
+freedom_error <- test6_summary[[1]][2,"Df"]
+freedom_error
+
+#calculating the Sum of squares 
+square_treat <- test6_summary[[1]][1,"Sum Sq"]
+square_treat
+
+#calculating the Sum of squares of Error
+square_error <- test6_summary[[1]][2,"Sum Sq"]
+square_error
+
+# calculating Ftest Statistic 
+QT1 <- square_treat/freedom
+QT2 <- square_error/freedom_error
+F_value <- QT1/QT2
+cat("F-Statistic is",F_value,"\n")
+
+# calculating the P_Value for F statistic
+p6<- test6_summary[[1]][[1,"Pr(>F)"]]
+cat("P-Value is",p6,"\n")
+
+alpha99 = 0.01
+# making the decision by comparing p-value with alpha value
+ifelse(p6 > alpha99, "Fail to reject H0","Reject H0")
+
+# calculating differences 
+TukeyHSD(test6)
+```
+
+#Test 7
+```{r}
+# Creating Data Frames using data.frame
+Eastern<-data.frame('Pupil_Exp'=c(4946,5953,6202,7243,6113),'Region'=rep('Easthernt_Third',5),stringsAsfactors=FALSE)
+Middle<-data.frame('Pupil_Exp'=c(6149,7451,6000,6479),'Region'=rep('Middle_Third',4),stringsAsfactors=FALSE)
+Western<-data.frame('Pupil_Exp'=c(5282,8605,6528,6911),'Region'=rep('Western_Third',4),stringsAsfactors=FALSE)
+
+# Combining three Data Frames using rbind function
+pupil<-rbind(Eastern,Middle,Western)
+pupil$Region<-as.factor(pupil$Region)
+pupil
+
+# performing the ANOVA Test
+test7 <-aov(Pupil_Exp ~ Region,data=pupil)
+test7_summary <- summary(test7)
+test7_summary
+
+# calculating Degrees Of Freedom
+freedom <- test7_summary[[1]][1,"Df"]
+freedom
+#calculating the Degrees Of Freedom for error
+freedom_error <- test7_summary[[1]][2,"Df"]
+freedom_error
+
+#calculating Sum of squares 
+square_treat <- test7_summary[[1]][1,"Sum Sq"]
+square_treat
+#calculating the Sum of squares
+square_error <- test7_summary[[1]][2,"Sum Sq"]
+square_error
+
+# performing the Ftest Statistic 
+QT1 <- square_treat/freedom
+QT2 <- square_error/freedom_error
+F_value <- QT1/QT2
+cat("F-Statistic is",F_value,"\n")
+# calculating P_Value for F statistic
+p7<- test7_summary[[1]][[1,"Pr(>F)"]]
+cat("P-Value is",p7,"\n")
+
+alpha_95 = 0.05
+# making the decision by comparing p-value with alpha value
+ifelse(p7 > alpha_95, "Fail to reject H0","Reject H0")
+
+# calculating differences  by performing tukey test
+TukeyHSD(test7)      
+
+```
+
+#Task 8
+```{r}
+FA_L1 <- c(9.2,9.4,8.9)
+FA_L2 <- c(8.5,9.2,8.9)
+FB_L1 <-c(7.1,7.2,8.5)
+FB_L2 <- c(5.5,5.8,7.6)
+
+# Creating Data Frame
+Plants_DF <- as.data.frame(matrix(c(rep("FoodA",3), rep("FoodA",3), rep("FoodB", 3), rep("FoodB", 3), rep("Light1",3), rep("Light2",3), rep("Light1",3), rep("Light2", 3), FA_L1, FA_L2, FB_L1, FB_L2),ncol = 3))
+names(Plants_DF) <- c('Food_Type','Light_Type', 'Growth_In_Inches')
+
+Plants_DF$Growth_In_Inches <- as.numeric(as.character(Plants_DF$Growth_In_Inches))
+
+# Anova Test
+T8_Result <- aov( Growth_In_Inches ~ Food_Type * Light_Type, data = Plants_DF)
+summary(T8_Result)
+
+RM1_p <- round(summary(T8_Result)[[1]][1,"Pr(>F)"],4)
+RM2_p <- round(summary(T8_Result)[[1]][2,"Pr(>F)"],4)
+C3_p <- round(summary(T8_Result)[[1]][3,"Pr(>F)"],4)
+
+alpha_95 = 0.05
+#decision making
+ifelse(RM1_p > alpha_95, "Fail to reject claim-1 H0","Reject Claim-1 H0")
+ifelse(RM2_p > alpha_95, "Fail to reject claim-2 H0","Reject Claim-2 H0")
+ifelse(C3_p > alpha_95, "Fail to reject claim-3 H0","Reject Claim-3 H0")
+
+```
+
+#Task 9 
+```{r}
+baseball <- read.csv("C:\\Users\\kasuk\\OneDrive\\Documents\\baseball.csv")
+View(baseball)
+
+psych::describe(baseball)
+```
+
+
+```
+
+```{r}
+#Finding the critical Value using qchisq function
+alpha_95 = 0.05
+CV1 <- qchisq(p=0.05, df=5,lower.tail = F)
+CV1
+
+OB <- c(13267, 17934, 18926, 17972, 24286, 7289)
+EX <- c(1/6,1/6,1/6,1/6,1/6,1/6)
+
+test_9.1 <-chisq.test(OB,p=EX)
+test_9.1
+
+
+# making the decision by comparing p-value with alpha value
+ifelse(test_9.1$p.value > alpha_95, "Fail to reject H0","Reject H0")
+
+
+```
+
+
+#Task 9.2
+```{r}
+# Importing the crop_data-set using read.csv function
+crop <- read.csv("C:\\Users\\kasuk\\OneDrive\\Documents\\crop_data.csv")
+psych::describe(crop)
+
+# performing the ANOVA Test
+test_9.2 <-  aov(yield ~ (density * fertilizer),data = crop)
+summary(test_9.2)
+
+p1 <- summary(test_9.2)[[1]][1,"Pr(>F)"]
+p2 <- summary(test_9.2)[[1]][2,"Pr(>F)"]
+p3 <- summary(test_9.2)[[1]][3,"Pr(>F)"]
+
+alpha_95 = 0.05
+# making the decision by comparing p-value with alpha value
+ifelse(p1 > alpha_95, "Fail to reject claim-1 H0","Reject Claim-1 H0")
+ifelse(p2 > alpha_95, "Fail to reject claim-2 H0","Reject Claim-2 H0")
+ifelse(p3 > alpha_95, "Fail to reject claim-3 H0","Reject Claim-3 H0")
+
+
+```
+
+
